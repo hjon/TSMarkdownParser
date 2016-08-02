@@ -39,8 +39,9 @@ typedef NSFont UIFont;
                          NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle) };
     
     // Courier New and Courier are the only monospace fonts compatible with watchOS 2
-    _monospaceAttributes = @{ NSFontAttributeName: [UIFont fontWithName:@"Courier New" size:12],
-                              NSForegroundColorAttributeName: [UIColor colorWithRed:0.95 green:0.54 blue:0.55 alpha:1] };
+    _monospaceAttributes = @{ /*NSFontAttributeName: [UIFont fontWithName:@"Courier New" size:30],*/
+                             NSForegroundColorAttributeName: [UIColor blackColor],
+                             NSBackgroundColorAttributeName : [UIColor lightGrayColor]};
     _strongAttributes = @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:12] };
     
 #if TARGET_OS_IPHONE
@@ -62,6 +63,16 @@ typedef NSFont UIFont;
     [defaultParser addCodeEscapingParsing];
     
     [defaultParser addEscapingParsing];
+    
+    /* inline parsing */
+    
+    [defaultParser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+        [attributedString addAttributes:weakParser.strongAttributes range:range];
+    }];
+    
+    [defaultParser addEmphasisParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+        [attributedString addAttributes:weakParser.emphasisAttributes range:range];
+    }];
     
     /* block parsing */
     
@@ -136,16 +147,6 @@ typedef NSFont UIFont;
                                      range:range];
         }
         [attributedString addAttributes:weakParser.linkAttributes range:range];
-    }];
-    
-    /* inline parsing */
-    
-    [defaultParser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
-        [attributedString addAttributes:weakParser.strongAttributes range:range];
-    }];
-    
-    [defaultParser addEmphasisParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
-        [attributedString addAttributes:weakParser.emphasisAttributes range:range];
     }];
     
     /* unescaping parsing */
@@ -316,7 +317,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
                                                              [linkURLString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
         
         NSRange linkTextRange = NSMakeRange(match.range.location + 1, linkStartInResult - match.range.location - 2);
-      
+        
         // deleting trailing markdown
         [attributedString deleteCharactersInRange:NSMakeRange(linkRange.location - 1, linkRange.length + 2)];
         // formatting link (may alter the length)
@@ -385,8 +386,8 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
     [self addParsingRuleWithRegularExpression:linkDataDetector block:^(NSTextCheckingResult *match, NSMutableAttributedString *attributedString) {
         NSString *linkURLString = [attributedString.string substringWithRange:match.range];
         [attributedString addAttribute:NSLinkAttributeName
-                                        value:[NSURL URLWithString:linkURLString]
-                                        range:match.range];
+                                 value:[NSURL URLWithString:linkURLString]
+                                 range:match.range];
         formattingBlock(attributedString, match.range);
     }];
 }
