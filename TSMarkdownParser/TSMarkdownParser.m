@@ -23,7 +23,7 @@ typedef NSFont UIFont;
     if (!self)
         return nil;
     
-    self.defaultAttributes = @{ NSFontAttributeName: [UIFont systemFontOfSize:12] };
+    self.defaultAttributes = @{ NSFontAttributeName: [UIFont systemFontOfSize:14] };
     
     _headerAttributes = @[ @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:23] },
                            @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:21] },
@@ -32,7 +32,7 @@ typedef NSFont UIFont;
                            @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:15] },
                            @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:13] } ];
     _listAttributes = @[];
-    _quoteAttributes = @[@{NSFontAttributeName: [UIFont fontWithName:@"HelveticaNeue-Italic" size:12]}];
+    _quoteAttributes = @[@{NSFontAttributeName: [UIFont fontWithName:@"HelveticaNeue-Italic" size:14]}];
     
     _imageAttributes = @{};
     _linkAttributes = @{ NSForegroundColorAttributeName: [UIColor blueColor],
@@ -42,12 +42,12 @@ typedef NSFont UIFont;
     _monospaceAttributes = @{ /*NSFontAttributeName: [UIFont fontWithName:@"Courier New" size:30],*/
                              NSForegroundColorAttributeName: [UIColor blackColor],
                              NSBackgroundColorAttributeName : [UIColor lightGrayColor]};
-    _strongAttributes = @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:12] };
+    _strongAttributes = @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:14] };
     
 #if TARGET_OS_IPHONE
-    _emphasisAttributes = @{ NSFontAttributeName: [UIFont italicSystemFontOfSize:12] };
+    _emphasisAttributes = @{ NSFontAttributeName: [UIFont italicSystemFontOfSize:14] };
 #else
-    _emphasisAttributes = @{ NSFontAttributeName: [[NSFontManager sharedFontManager] convertFont:[UIFont systemFontOfSize:12] toHaveTrait:NSItalicFontMask] };
+    _emphasisAttributes = @{ NSFontAttributeName: [[NSFontManager sharedFontManager] convertFont:[UIFont systemFontOfSize:14] toHaveTrait:NSItalicFontMask] };
 #endif
     
     return self;
