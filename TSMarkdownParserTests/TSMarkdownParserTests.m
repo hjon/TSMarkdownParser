@@ -300,6 +300,16 @@
     XCTAssertEqualObjects(linkColor, [UIColor blueColor]);
 }
 
+- (void)testStandardAutoLinkParsingWithEmoji {
+    NSAttributedString *attributedString = [self.standardParser attributedStringFromMarkdown:@"Hello\n This is a link https://www.😊.com/ to test Wi-Fi\nat home"];
+    NSURL *link = [attributedString attribute:NSLinkAttributeName atIndex:24 effectiveRange:NULL];
+    XCTAssertEqualObjects(link, [NSURL URLWithString:@"https://www.xn--o28h.com/"]);
+    NSNumber *underline = [attributedString attribute:NSUnderlineStyleAttributeName atIndex:24 effectiveRange:NULL];
+    XCTAssertEqualObjects(underline, @(NSUnderlineStyleSingle));
+    UIColor *linkColor = [attributedString attribute:NSForegroundColorAttributeName atIndex:24 effectiveRange:NULL];
+    XCTAssertEqualObjects(linkColor, [UIColor blueColor]);
+}
+
 - (void)testStandardLinkParsingOnEndOfStrings {
     NSAttributedString *attributedString = [self.standardParser attributedStringFromMarkdown:@"Hello\n This is a [link](https://www.example.net/)"];
     NSURL *link = [attributedString attribute:NSLinkAttributeName atIndex:20 effectiveRange:NULL];

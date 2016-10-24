@@ -140,10 +140,10 @@ typedef NSFont UIFont;
     
     /* autodetection */
     
-    [defaultParser addLinkDetectionWithLinkFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSString * _Nullable link) {
+    [defaultParser addLinkDetectionWithLinkFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSURL *url) {
         if (!weakParser.skipLinkAttribute) {
             [attributedString addAttribute:NSLinkAttributeName
-                                     value:[NSURL URLWithString:link]
+                                     value:url
                                      range:range];
         }
         [attributedString addAttributes:weakParser.linkAttributes range:range];
@@ -392,11 +392,10 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
     }];
 }
 
-- (void)addLinkDetectionWithLinkFormattingBlock:(TSMarkdownParserLinkFormattingBlock)formattingBlock {
+- (void)addLinkDetectionWithLinkFormattingBlock:(TSMarkdownParserLinkDetectionFormattingBlock)formattingBlock {
     NSDataDetector *linkDataDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:nil];
     [self addParsingRuleWithRegularExpression:linkDataDetector block:^(NSTextCheckingResult *match, NSMutableAttributedString *attributedString) {
-        NSString *linkURLString = [attributedString.string substringWithRange:match.range];
-        formattingBlock(attributedString, match.range, linkURLString);
+        formattingBlock(attributedString, match.range, match.URL);
     }];
 }
 
