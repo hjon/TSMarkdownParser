@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void (^TSMarkdownParserFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range);
 typedef void (^TSMarkdownParserLevelFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level);
 typedef void (^TSMarkdownParserLinkFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range,  NSString * _Nullable link);
+typedef void (^TSMarkdownParserLinkDetectionFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range,  NSURL *url);
 
 @interface TSMarkdownParser : TSBaseParser
 
@@ -114,7 +115,7 @@ typedef void (^TSMarkdownParserLinkFormattingBlock)(NSMutableAttributedString *a
 - (void)addLinkDetectionWithFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock __attribute__((deprecated("use addLinkDetectionWithLinkFormattingBlock: instead")));
 /// adds links autodetection support to parser
 /// @note    you can use formattingBlock to add NSLinkAttributeName
-- (void)addLinkDetectionWithLinkFormattingBlock:(TSMarkdownParserLinkFormattingBlock)formattingBlock;
+- (void)addLinkDetectionWithLinkFormattingBlock:(TSMarkdownParserLinkDetectionFormattingBlock)formattingBlock;
 
 /* 6. examples inline parsing: monospaced, strong, emphasis and link detection */
 /* text accepts newlines */
