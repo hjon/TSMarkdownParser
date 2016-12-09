@@ -92,6 +92,15 @@ typedef NSFont UIFont;
         [TSMarkdownParser addAttributes:weakParser.listAttributes atIndex:level - 1 toString:attributedString range:range];
     }];
     
+    [defaultParser addShortQuoteParsingWithMaxLevel:0 leadFormattingBlock:^(NSMutableAttributedString * _Nonnull attributedString, NSRange range, NSUInteger level) {
+        NSMutableString *quoteString = [NSMutableString string];
+        while (level--)
+            [quoteString appendString:@"\t"];
+        [attributedString replaceCharactersInRange:range withString:quoteString];
+    } textFormattingBlock:^(NSMutableAttributedString * _Nonnull attributedString, NSRange range, NSUInteger level) {
+        [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
+    }];
+    
     [defaultParser addQuoteParsingWithMaxLevel:0 leadFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level) {
         NSMutableString *quoteString = [NSMutableString string];
         while (level--)
