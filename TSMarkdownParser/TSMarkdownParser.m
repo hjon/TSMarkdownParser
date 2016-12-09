@@ -39,9 +39,9 @@ typedef NSFont UIFont;
                          NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle) };
     
     // Courier New and Courier are the only monospace fonts compatible with watchOS 2
-    _monospaceAttributes = @{ /*NSFontAttributeName: [UIFont fontWithName:@"Courier New" size:30],*/
-                             NSForegroundColorAttributeName: [UIColor blackColor],
-                             NSBackgroundColorAttributeName : [UIColor lightGrayColor]};
+    _monospaceAttributes = @{ NSFontAttributeName: [UIFont fontWithName:@"Menlo" size:12],
+                              NSForegroundColorAttributeName: [UIColor blackColor],
+                              NSBackgroundColorAttributeName: [UIColor colorWithRed:0.933 green:0.933 blue:0.933 alpha:1]};
     _strongAttributes = @{ NSFontAttributeName: [UIFont boldSystemFontOfSize:14] };
     
 #if TARGET_OS_IPHONE
@@ -160,8 +160,20 @@ typedef NSFont UIFont;
     
     /* unescaping parsing */
     
-    [defaultParser addCodeUnescapingParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+    // if it's a code block
+    [defaultParser addCodeUnescapingParsingWithPattern:TSMarkdownCodeBlockOnlyRegex withFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
         [attributedString addAttributes:weakParser.monospaceAttributes range:range];
+    }];
+    
+    // if it's anything else (should only be inline code/highlight)
+    [defaultParser addCodeUnescapingParsingWithPattern:TSMarkdownCodeEscapingRegex withFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+        [attributedString addAttributes:weakParser.monospaceAttributes range:range];
+        UIColor *fontColor = [UIColor colorWithRed:0.801 green:0.149 blue:0.305 alpha:1];
+        [attributedString addAttribute:NSForegroundColorAttributeName value:fontColor range:range];
+        
+        NSString *string = [attributedString attributedSubstringFromRange:range].string;
+        NSString *trimmedString = [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        [attributedString replaceCharactersInRange:range withString:trimmedString];
     }];
     
     [defaultParser addUnescapingParsing];
@@ -179,6 +191,7 @@ typedef NSFont UIFont;
 
 // inline escaping regex
 static NSString *const TSMarkdownCodeEscapingRegex  = @"(?<!\\\\)(?:\\\\\\\\)*+(`+)(.*?[^`].*?)(\\1)(?!`)";
+static NSString *const TSMarkdownCodeBlockOnlyRegex = @"(?<!\\\\)(?:\\\\\\\\)*+(```+)(.*?[^`].*?)(\\1)(?!```)";
 static NSString *const TSMarkdownEscapingRegex      = @"\\\\.";
 static NSString *const TSMarkdownUnescapingRegex    = @"\\\\[0-9a-z]{4}";
 
@@ -420,8 +433,9 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
     return [NSString stringWithCharacters:&whole_char length:1];
 }
 
-- (void)addCodeUnescapingParsingWithFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock {
-    [self addEnclosedParsingWithPattern:TSMarkdownCodeEscapingRegex formattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+- (void)addCodeUnescapingParsingWithPattern:(NSString *)pattern
+                        withFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock {
+    [self addEnclosedParsingWithPattern:pattern formattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
         NSUInteger i = 0;
         NSString *matchString = [attributedString attributedSubstringFromRange:range].string;
         NSMutableString *unescapedString = [NSMutableString string];

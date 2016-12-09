@@ -132,7 +132,8 @@ typedef void (^TSMarkdownParserLinkDetectionFormattingBlock)(NSMutableAttributed
 /* to use together with `addEscapingParsing` or `addCodeEscapingParsing` */
 
 /// accepts "`hexa`", "``hexa``", ...; to use with `addCodeEscapingParsing`
-- (void)addCodeUnescapingParsingWithFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock;
+- (void)addCodeUnescapingParsingWithPattern:(NSString *)pattern
+                        withFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock;
 /// accepts "\hexa"; to use with `addEscapingParsing`
 - (void)addUnescapingParsing;
 

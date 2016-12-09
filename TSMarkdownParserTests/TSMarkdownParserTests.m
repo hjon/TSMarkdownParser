@@ -633,4 +633,70 @@
     XCTAssertEqualObjects(attributedString.string, @"Hello\n*.*\n");
 }
 
+- (void)testCodeBlockParsing {
+    XCTAssertEqualObjects(@"code\nblock", [self parseAsString:@"```code\nblock```"]);
+    
+    XCTAssertEqualObjects(@"*unformatted* **markdown**", [self parseAsString:@"```*unformatted* **markdown**```"]);
+}
+
+- (void)testStandardCodeBlockAttributes {
+    NSAttributedString *attributedString = [self parseAsAttributedString:@"```code\nblock```"];
+    
+    NSRange range = NSMakeRange(0, attributedString.length);
+    UIColor *foregroundColor = [attributedString attribute:NSForegroundColorAttributeName atIndex:0 effectiveRange:&range];
+    UIColor *backgroundColor = [attributedString attribute:NSBackgroundColorAttributeName atIndex:0 effectiveRange:&range];
+    UIFont *font = [attributedString attribute:NSFontAttributeName atIndex:0 effectiveRange:&range];
+    
+    UIColor *expectedForegroundColor = [UIColor blackColor];
+    UIColor *expectedBackgroundColor = [UIColor colorWithRed:0.933 green:0.933 blue:0.933 alpha:1];
+#if TARGET_OS_TV
+    UIFont *expectedFont = [UIFont fontWithName:@"Menlo" size:29];
+#else
+    UIFont *expectedFont = [UIFont fontWithName:@"Menlo" size:12];
+#endif
+    
+    XCTAssertEqualObjects(expectedForegroundColor, foregroundColor);
+    XCTAssertEqualObjects(expectedBackgroundColor, backgroundColor);
+    XCTAssertEqualObjects(expectedFont, font);
+}
+
+- (void)testStandardHighlightParsing {
+    XCTAssertEqualObjects(@"highlight", [self parseAsString:@"`highlight`"]);
+    XCTAssertEqualObjects(@"This is a highlight.", [self parseAsString:@"This is a `highlight`."]);
+    XCTAssertEqualObjects(@"highlight highlight", [self parseAsString:@"`highlight` `highlight`"]);
+    
+    XCTAssertEqualObjects(@"*unformatted* **markdown**", [self parseAsString:@"`*unformatted* **markdown**`"]);
+    
+    XCTAssertEqualObjects(@"spaces should be removed", [self parseAsString:@"`   spaces should be removed   `"]);
+}
+
+- (void)testStandardHighlightAttributes {
+    NSAttributedString *attributedString = [self parseAsAttributedString:@"`highlighted`"];
+    
+    NSRange range = NSMakeRange(0, attributedString.length);
+    UIColor *foregroundColor = [attributedString attribute:NSForegroundColorAttributeName atIndex:0 effectiveRange:&range];
+    UIColor *backgroundColor = [attributedString attribute:NSBackgroundColorAttributeName atIndex:0 effectiveRange:&range];
+    UIFont *font = [attributedString attribute:NSFontAttributeName atIndex:0 effectiveRange:&range];
+    
+    UIColor *expectedForegroundColor = [UIColor colorWithRed:0.801 green:0.149 blue:0.305 alpha:1];
+    UIColor *expectedBackgroundColor = [UIColor colorWithRed:0.933 green:0.933 blue:0.933 alpha:1];
+#if TARGET_OS_TV
+    UIFont *expectedFont = [UIFont fontWithName:@"Menlo" size:29];
+#else
+    UIFont *expectedFont = [UIFont fontWithName:@"Menlo" size:12];
+#endif
+    
+    XCTAssertEqualObjects(expectedForegroundColor, foregroundColor);
+    XCTAssertEqualObjects(expectedBackgroundColor, backgroundColor);
+    XCTAssertEqualObjects(expectedFont, font);
+}
+
+- (NSAttributedString *)parseAsAttributedString:(NSString *)input {
+    return [self.standardParser attributedStringFromMarkdown:input];
+}
+
+- (NSString *)parseAsString:(NSString *)input {
+    return [self parseAsAttributedString:input].string;
+}
+
 @end
