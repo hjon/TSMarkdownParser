@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^TSMarkdownParserFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range);
+typedef void (^TSMarkdownParserFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range, NSString * _Nullable enclosingDelimiter);
 typedef void (^TSMarkdownParserLevelFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level);
 typedef void (^TSMarkdownParserLinkFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range,  NSString * _Nullable link);
 typedef void (^TSMarkdownParserLinkDetectionFormattingBlock)(NSMutableAttributedString *attributedString, NSRange range,  NSURL *url);

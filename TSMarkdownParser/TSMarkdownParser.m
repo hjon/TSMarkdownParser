@@ -66,11 +66,11 @@ typedef NSFont UIFont;
     
     /* inline parsing */
     
-    [defaultParser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+    [defaultParser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSString *enclosingDelimiter) {
         [attributedString addAttributes:weakParser.strongAttributes range:range];
     }];
     
-    [defaultParser addEmphasisParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+    [defaultParser addEmphasisParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSString *enclosingDelimiter) {
         [attributedString addAttributes:weakParser.emphasisAttributes range:range];
     }];
     
@@ -160,20 +160,20 @@ typedef NSFont UIFont;
     
     /* unescaping parsing */
     
-    // if it's a code block
-    [defaultParser addCodeUnescapingParsingWithPattern:TSMarkdownCodeBlockOnlyRegex withFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
-        [attributedString addAttributes:weakParser.monospaceAttributes range:range];
-    }];
-    
-    // if it's anything else (should only be inline code/highlight)
-    [defaultParser addCodeUnescapingParsingWithPattern:TSMarkdownCodeEscapingRegex withFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
-        [attributedString addAttributes:weakParser.monospaceAttributes range:range];
-        UIColor *fontColor = [UIColor colorWithRed:0.801 green:0.149 blue:0.305 alpha:1];
-        [attributedString addAttribute:NSForegroundColorAttributeName value:fontColor range:range];
-        
-        NSString *string = [attributedString attributedSubstringFromRange:range].string;
-        NSString *trimmedString = [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-        [attributedString replaceCharactersInRange:range withString:trimmedString];
+    [defaultParser addCodeUnescapingParsingWithPattern:TSMarkdownCodeEscapingRegex withFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSString *enclosingDelimiter) {
+        if ([enclosingDelimiter hasPrefix:@"`"] && enclosingDelimiter.length >= 3) {
+            // if it's a code block
+            [attributedString addAttributes:weakParser.monospaceAttributes range:range];
+        } else if ([enclosingDelimiter hasPrefix:@"`"] && enclosingDelimiter.length < 3) {
+            // if it's anything else (should only be inline code/highlight)
+            [attributedString addAttributes:weakParser.monospaceAttributes range:range];
+            UIColor *fontColor = [UIColor colorWithRed:0.801 green:0.149 blue:0.305 alpha:1];
+            [attributedString addAttribute:NSForegroundColorAttributeName value:fontColor range:range];
+
+            NSString *string = [attributedString attributedSubstringFromRange:range].string;
+            NSString *trimmedString = [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            [attributedString replaceCharactersInRange:range withString:trimmedString];
+        }
     }];
     
     [defaultParser addUnescapingParsing];
@@ -295,7 +295,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
             NSAttributedString *imgStr = [NSAttributedString attributedStringWithAttachment:imageAttachment];
             [attributedString replaceCharactersInRange:match.range withAttributedString:imgStr];
             if (formattingBlock) {
-                formattingBlock(attributedString, NSMakeRange(match.range.location, imgStr.length));
+                formattingBlock(attributedString, NSMakeRange(match.range.location, imgStr.length), nil);
             }
         } else {
             NSUInteger linkTextEndLocation = [attributedString.string rangeOfString:@"]" options:(NSStringCompareOptions)0 range:match.range].location;
@@ -303,7 +303,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
             NSString *alternativeText = [attributedString.string substringWithRange:linkTextRange];
             [attributedString replaceCharactersInRange:match.range withString:alternativeText];
             if (alternativeFormattingBlock) {
-                alternativeFormattingBlock(attributedString, NSMakeRange(match.range.location, alternativeText.length));
+                alternativeFormattingBlock(attributedString, NSMakeRange(match.range.location, alternativeText.length), nil);
             }
         }
     }];
@@ -348,7 +348,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
                                      value:url
                                      range:linkTextRange];
         }
-        formattingBlock(attributedString, linkTextRange);
+        formattingBlock(attributedString, linkTextRange, nil);
         // deleting leading markdown
         [attributedString deleteCharactersInRange:NSMakeRange(match.range.location, 1)];
     }];
@@ -381,9 +381,10 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
     NSRegularExpression *parsing = [NSRegularExpression regularExpressionWithPattern:pattern options:(NSRegularExpressionOptions)0 error:nil];
     [self addParsingRuleWithRegularExpression:parsing block:^(NSTextCheckingResult *match, NSMutableAttributedString *attributedString) {
         // deleting trailing markdown
+        NSString *initialDelimiter = [attributedString attributedSubstringFromRange:[match rangeAtIndex:3]].string;
         [attributedString deleteCharactersInRange:[match rangeAtIndex:3]];
         // formatting string (may alter the length)
-        formattingBlock(attributedString, [match rangeAtIndex:2]);
+        formattingBlock(attributedString, [match rangeAtIndex:2], initialDelimiter);
         // deleting leading markdown
         [attributedString deleteCharactersInRange:[match rangeAtIndex:1]];
     }];
@@ -393,7 +394,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
     [self addEnclosedParsingWithPattern:TSMarkdownMonospaceRegex formattingBlock:formattingBlock];
 }
 
-- (void)addStrongParsingWithFormattingBlock:(void(^)(NSMutableAttributedString *attributedString, NSRange range))formattingBlock {
+- (void)addStrongParsingWithFormattingBlock:(void(^)(NSMutableAttributedString *attributedString, NSRange range, NSString *enclosingDelimiter))formattingBlock {
     [self addEnclosedParsingWithPattern:TSMarkdownStrongRegex formattingBlock:formattingBlock];
 }
 
@@ -410,7 +411,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
         [attributedString addAttribute:NSLinkAttributeName
                                  value:[NSURL URLWithString:linkURLString]
                                  range:match.range];
-        formattingBlock(attributedString, match.range);
+        formattingBlock(attributedString, match.range, nil);
     }];
 }
 
@@ -435,7 +436,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
 
 - (void)addCodeUnescapingParsingWithPattern:(NSString *)pattern
                         withFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock {
-    [self addEnclosedParsingWithPattern:pattern formattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+    [self addEnclosedParsingWithPattern:pattern formattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSString *enclosingDelimiter) {
         NSUInteger i = 0;
         NSString *matchString = [attributedString attributedSubstringFromRange:range].string;
         NSMutableString *unescapedString = [NSMutableString string];
@@ -446,7 +447,7 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
         [attributedString replaceCharactersInRange:range withString:unescapedString];
         
         // formatting string (may alter the length)
-        formattingBlock(attributedString, NSMakeRange(range.location, unescapedString.length));
+        formattingBlock(attributedString, NSMakeRange(range.location, unescapedString.length), enclosingDelimiter);
     }];
 }
 

@@ -221,7 +221,7 @@
     [self.parser addListParsingWithMaxLevel:1 leadFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level) {
         [attributedString replaceCharactersInRange:range withString:@"    • "];
     } textFormattingBlock:nil];
-    [self.parser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
+    [self.parser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSString *enclosingDelimiter) {
         [attributedString addAttribute:NSFontAttributeName
                                  value:strongFont
                                  range:range];
