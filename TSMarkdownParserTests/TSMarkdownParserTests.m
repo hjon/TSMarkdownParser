@@ -691,6 +691,31 @@
     XCTAssertEqualObjects(expectedFont, font);
 }
 
+- (void)testHighlightNestedInCodeBlock {
+    XCTAssertEqualObjects(@"something that includes a `nested highlight`", [self parseAsString:@"```something that includes a `nested highlight````"]);
+    XCTAssertEqualObjects(@"\n`nested highlight`\n", [self parseAsString:@"```\n`nested highlight`\n```"]);
+    XCTAssertEqualObjects(@"this is not considered a nested highlight", [self parseAsString:@"````this is not considered a nested highlight````"]);
+
+    NSAttributedString *attributedString = [self parseAsAttributedString:@"```a `nested highlight````"];
+
+    NSRange range = NSMakeRange(4, (attributedString.length - 4));
+    UIColor *foregroundColor = [attributedString attribute:NSForegroundColorAttributeName atIndex:0 effectiveRange:&range];
+    UIColor *backgroundColor = [attributedString attribute:NSBackgroundColorAttributeName atIndex:0 effectiveRange:&range];
+    UIFont *font = [attributedString attribute:NSFontAttributeName atIndex:0 effectiveRange:&range];
+
+    UIColor *expectedForegroundColor = [UIColor blackColor];
+    UIColor *expectedBackgroundColor = [UIColor colorWithRed:0.933 green:0.933 blue:0.933 alpha:1];
+#if TARGET_OS_TV
+    UIFont *expectedFont = [UIFont fontWithName:@"Menlo" size:29];
+#else
+    UIFont *expectedFont = [UIFont fontWithName:@"Menlo" size:12];
+#endif
+
+    XCTAssertEqualObjects(expectedForegroundColor, foregroundColor);
+    XCTAssertEqualObjects(expectedBackgroundColor, backgroundColor);
+    XCTAssertEqualObjects(expectedFont, font);
+}
+
 - (NSAttributedString *)parseAsAttributedString:(NSString *)input {
     return [self.standardParser attributedStringFromMarkdown:input];
 }
