@@ -92,21 +92,32 @@ typedef NSFont UIFont;
         [TSMarkdownParser addAttributes:weakParser.listAttributes atIndex:level - 1 toString:attributedString range:range];
     }];
     
-    [defaultParser addShortQuoteParsingWithMaxLevel:0 leadFormattingBlock:^(NSMutableAttributedString * _Nonnull attributedString, NSRange range, NSUInteger level) {
-        NSMutableString *quoteString = [NSMutableString string];
-        while (level--)
-            [quoteString appendString:@"\t"];
-        [attributedString replaceCharactersInRange:range withString:quoteString];
-    } textFormattingBlock:^(NSMutableAttributedString * _Nonnull attributedString, NSRange range, NSUInteger level) {
-        [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
-    }];
+//    [defaultParser addShortQuoteParsingWithMaxLevel:0 leadFormattingBlock:^(NSMutableAttributedString * _Nonnull attributedString, NSRange range, NSUInteger level) {
+//        NSMutableString *quoteString = [NSMutableString string];
+//        while (level--)
+//            [quoteString appendString:@"\t"];
+//        [attributedString replaceCharactersInRange:range withString:quoteString];
+//        [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
+//    } textFormattingBlock:^(NSMutableAttributedString * _Nonnull attributedString, NSRange range, NSUInteger level) {
+//        [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
+//    }];
     
-    [defaultParser addQuoteParsingWithMaxLevel:0 leadFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level) {
+//    [defaultParser addQuoteParsingWithMaxLevel:0 leadFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level) {
+//        NSMutableString *quoteString = [NSMutableString string];
+//        while (level--)
+//            [quoteString appendString:@"\t"];
+//        [attributedString replaceCharactersInRange:range withString:quoteString];
+//    } textFormattingBlock:^(NSMutableAttributedString * attributedString, NSRange range, NSUInteger level) {
+//        [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
+//    }];
+
+    [defaultParser addLeadParsingWithPattern:TSMarkdownAllQuoteRegex maxLevel:0 leadFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range, NSUInteger level) {
         NSMutableString *quoteString = [NSMutableString string];
         while (level--)
             [quoteString appendString:@"\t"];
         [attributedString replaceCharactersInRange:range withString:quoteString];
-    } textFormattingBlock:^(NSMutableAttributedString * attributedString, NSRange range, NSUInteger level) {
+        [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
+    } formattingBlock:^(NSMutableAttributedString * attributedString, NSRange range, NSUInteger level) {
         [TSMarkdownParser addAttributes:weakParser.quoteAttributes atIndex:level - 1 toString:attributedString range:range];
     }];
     
@@ -202,6 +213,7 @@ static NSString *const TSMarkdownListRegex          = @"^([\\*\\+\\-]{1,%@})\\s+
 static NSString *const TSMarkdownShortListRegex     = @"^([\\*\\+\\-]{1,%@})\\s*([^\\*\\+\\-].*)$";
 static NSString *const TSMarkdownQuoteRegex         = @"^(\\>{1,%@})\\s+(.+)$";
 static NSString *const TSMarkdownShortQuoteRegex    = @"^(\\>{1,%@})\\s*([^\\>].*)$";
+static NSString *const TSMarkdownAllQuoteRegex      = @"^(\\>{1,%@})[ \\t\\f]*(.*)$";
 
 // inline bracket regex
 static NSString *const TSMarkdownImageRegex         = @"\\!\\[[^\\[]*?\\]\\(\\S*\\)";
